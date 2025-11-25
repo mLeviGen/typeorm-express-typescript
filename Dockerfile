@@ -2,10 +2,13 @@ FROM node:16.14.0-alpine
 
 WORKDIR /app
 
-COPY ./package.json .
-COPY ./package-lock.json .
+COPY package*.json ./
+RUN if [ -f package-lock.json ]; then \
+      npm ci --no-fund --no-audit; \
+    else \
+      npm install --no-fund --no-audit; \
+    fi && npm cache clean --force
 
-RUN npm install && npm cache clean --force
 
 COPY . .
 

@@ -1,4 +1,3 @@
-version: '3'
 
 services:
   db_postgres:
@@ -22,6 +21,8 @@ services:
       - db_postgres
     links:
       - db_postgres
+    user: "${UID}:${GID}"
+
 
   be_boilerplate_test:
     container_name: 'be_boilerplate_test'
