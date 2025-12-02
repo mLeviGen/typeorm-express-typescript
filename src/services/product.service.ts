@@ -1,18 +1,39 @@
-import { getRepository } from 'typeorm';
-import { CheeseProduct } from '../orm/entity/CheeseProduct';
-import { NotFound } from '../utils/httpErrors';
+import { getRepository, Repository } from 'typeorm';
+import { CheeseProduct } from '../orm/entities/CheeseProduct';
+import type { CreateProductDto, UpdateProductDto } from '../dto/product.dto';
 
 export class ProductService {
-  private repo = getRepository(CheeseProduct);
-  list() { return this.repo.find(); }
-  get(id: number) { return this.repo.findOne(id); }
-  create(dto: Partial<CheeseProduct>) { return this.repo.save(this.repo.create(dto)); }
-  async update(id: number, dto: Partial<CheeseProduct>) {
-    const e = await this.repo.findOne(id); if (!e) throw new NotFound('Product not found');
-    Object.assign(e, dto); return this.repo.save(e);
+  private get repo(): Repository<CheeseProduct> {
+    return getRepository(CheeseProduct);
   }
-  async remove(id: number) {
-    const r = await this.repo.delete(id);
-    if (!r.affected) throw new NotFound('Product not found');
+
+  list(): Promise<CheeseProduct[]> {
+    return this.repo.find();
+  }
+
+  get(id: number): Promise<CheeseProduct | undefined> {
+    return this.repo.findOne(id);
+  }
+
+  async create(dto: CreateProductDto): Promise<CheeseProduct> {
+    const entity = this.repo.create({
+      name: dto.name,
+      cheeseType: dto.cheeseType,
+      basePrice: dto.basePrice ?? '0',
+      isActive: dto.isActive ?? true,
+    });
+    return this.repo.save(entity);
+  }
+
+  async update(id: number, dto: UpdateProductDto): Promise<CheeseProduct | null> {
+    const entity = await this.repo.findOne(id);
+    if (!entity) return null;
+    this.repo.merge(entity, dto);
+    return this.repo.save(entity);
+  }
+
+  async remove(id: number): Promise<boolean> {
+    const res = await this.repo.delete(id);
+    return !!res.affected && res.affected > 0;
   }
 }

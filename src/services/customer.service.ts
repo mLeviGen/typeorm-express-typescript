@@ -1,18 +1,39 @@
-import { getRepository } from 'typeorm';
-import { Customer } from '../orm/entity/Customer';
-import { NotFound } from '../utils/httpErrors';
+import { getRepository, Repository } from 'typeorm';
+import { Customer } from '../orm/entities/Customer';
+import type { CreateCustomerDto, UpdateCustomerDto } from '../dto/customer.dto';
 
 export class CustomerService {
-  private repo = getRepository(Customer);
-  list() { return this.repo.find({ relations: ['address'] }); }
-  get(id: number) { return this.repo.findOne(id, { relations: ['address'] }); }
-  create(dto: Partial<Customer>) { return this.repo.save(this.repo.create(dto)); }
-  async update(id: number, dto: Partial<Customer>) {
-    const e = await this.repo.findOne(id); if (!e) throw new NotFound('Customer not found');
-    Object.assign(e, dto); return this.repo.save(e);
+  private get repo(): Repository<Customer> {
+    return getRepository(Customer);
   }
-  async remove(id: number) {
-    const r = await this.repo.delete(id);
-    if (!r.affected) throw new NotFound('Customer not found');
+
+  list(): Promise<Customer[]> {
+    return this.repo.find({
+      relations: ['address', 'orders'],
+    });
+  }
+
+  get(id: number): Promise<Customer | undefined> {
+    return this.repo.findOne(id, {
+      relations: ['address', 'orders'],
+    });
+  }
+
+  async create(dto: CreateCustomerDto): Promise<Customer> {
+    const entity = this.repo.create(dto);
+    return this.repo.save(entity);
+  }
+
+  async update(id: number, dto: UpdateCustomerDto): Promise<Customer | null> {
+    const entity = await this.repo.findOne(id);
+    if (!entity) return null;
+
+    this.repo.merge(entity, dto);
+    return this.repo.save(entity);
+  }
+
+  async remove(id: number): Promise<boolean> {
+    const res = await this.repo.delete(id);
+    return !!res.affected && res.affected > 0;
   }
 }

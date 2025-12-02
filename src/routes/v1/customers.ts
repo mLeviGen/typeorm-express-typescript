@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { checkJwt } from '../../middleware/checkJwt';
 import { checkRole } from '../../middleware/checkRole';
-import * as c from '../../controllers/customers/customer.controller';
+import { CustomerController } from '../../controllers/customers/customer.controller';
 
-const r = Router();
-r.get('/', c.list);
-r.get('/:id(\\d+)', c.show);
-r.post('/', [checkJwt, checkRole(['ADMINISTRATOR'])], c.create);
-r.put('/:id(\\d+)', [checkJwt, checkRole(['ADMINISTRATOR'])], c.edit);
-r.delete('/:id(\\d+)', [checkJwt, checkRole(['ADMINISTRATOR'])], c.destroy);
-export default r;
+const router = Router();
+const controller = new CustomerController();
+router.get('/', controller.list.bind(controller));
+router.get('/:id(\\d+)', controller.get.bind(controller));
+router.post('/', [checkJwt, checkRole(['ADMINISTRATOR'])], controller.create.bind(controller));
+router.patch('/:id(\\d+)', [checkJwt, checkRole(['ADMINISTRATOR'])], controller.update.bind(controller));
+router.delete('/:id(\\d+)', [checkJwt, checkRole(['ADMINISTRATOR'])], controller.delete.bind(controller));
+export default router;

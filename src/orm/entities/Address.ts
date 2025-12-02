@@ -17,3 +17,4 @@ export class Address {
   @OneToMany(() => Customer, (c) => c.address)
   customers!: Customer[];
 }
+

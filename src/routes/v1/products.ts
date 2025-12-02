@@ -1,12 +1,13 @@
 import { Router } from 'express';
-import { checkJwt } from '../../middleware/checkJwt';
-import { checkRole } from '../../middleware/checkRole';
-import * as c from '../../controllers/catalog/product.controller';  // ← ../../
+import { ProductController } from '../../controllers/products/product.controller';
 
-const r = Router();
-r.get('/', c.list);
-r.get('/:id(\\d+)', c.show);
-r.post('/', [checkJwt, checkRole(['ADMINISTRATOR'])], c.create);
-r.put('/:id(\\d+)', [checkJwt, checkRole(['ADMINISTRATOR'])], c.edit);
-r.delete('/:id(\\d+)', [checkJwt, checkRole(['ADMINISTRATOR'])], c.destroy);
-export default r;
+const router = Router();
+const controller = new ProductController();
+
+router.get('/', controller.list.bind(controller));
+router.get('/:id', controller.get.bind(controller));
+router.post('/', controller.create.bind(controller));
+router.patch('/:id', controller.update.bind(controller));
+router.delete('/:id', controller.delete.bind(controller));
+
+export default router;

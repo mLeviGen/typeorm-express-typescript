@@ -2,37 +2,68 @@ import { Request, Response, NextFunction } from 'express';
 import { AddressService } from '../../services/address.service';
 import type { CreateAddressDto, UpdateAddressDto } from '../../dto/address.dto';
 
-const svc = new AddressService();
+export class AddressController {
+  private addressService = new AddressService();
 
-export const list = async (_: Request, res: Response, next: NextFunction) => {
-  try { res.json(await svc.list()); } catch (e) { next(e); }
-};
+  async list(req: Request, res: Response, next: NextFunction) {
+    try {
+      const items = await this.addressService.list();
+      res.json(items);
+    } catch (e) {
+      next(e);
+    }
+  }
 
-export const show = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const x = await svc.get(+req.params.id);
-    if (!x) return res.status(404).json({ message: 'Not found' });
-    res.json(x);
-  } catch (e) { next(e); }
-};
+  async get(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = Number(req.params.id);
+      const addr = await this.addressService.get(id);
+      if (!addr) {
+        res.status(404).json({ message: 'Not found' });
+        return;
+      }
+      res.json(addr);
+    } catch (e) {
+      next(e);
+    }
+  }
 
-export const create = async (req: Request, res: Response, next: NextFunction) => {
-  try { res.status(201).json(await svc.create(req.body as CreateAddressDto)); }
-  catch (e) { next(e); }
-};
+  async create(req: Request, res: Response, next: NextFunction) {
+    try {
+      const dto = req.body as CreateAddressDto;
+      const created = await this.addressService.create(dto);
+      res.status(201).json(created);
+    } catch (e) {
+      next(e);
+    }
+  }
 
-export const edit = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const x = await svc.update(+req.params.id, req.body as UpdateAddressDto);
-    if (!x) return res.status(404).json({ message: 'Not found' });
-    res.json(x);
-  } catch (e) { next(e); }
-};
+  async update(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = Number(req.params.id);
+      const dto = req.body as UpdateAddressDto;
+      const updated = await this.addressService.update(id, dto);
+      if (!updated) {
+        res.status(404).json({ message: 'Not found' });
+        return;
+      }
+      res.json(updated);
+    } catch (e) {
+      next(e);
+    }
+  }
 
-export const destroy = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const ok = await svc.remove(+req.params.id);
-    if (!ok) return res.status(404).json({ message: 'Not found' });
-    res.status(204).end();
-  } catch (e) { next(e); }
-};
+  async delete(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = Number(req.params.id);
+      const success = await this.addressService.remove(id);
+      if (!success) {
+        res.status(404).json({ message: 'Not found' });
+        return;
+      }
+      res.status(204).end();
+    } catch (e) {
+      next(e);
+    }
+  }
+}

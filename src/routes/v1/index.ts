@@ -6,12 +6,12 @@ import customers from './customers';
 import addresses from './addresses';
 import orders from './orders';
 
-const r = Router();
-r.use('/auth', auth);
-r.use('/users', users);
-r.use('/products', products);
-r.use('/customers', customers);
-r.use('/addresses', addresses);
-r.use('/orders', orders);
+const router = Router();
+router.use('/auth', auth);
+router.use('/users', users);
+router.use('/products', products);
+router.use('/customers', customers);
+router.use('/addresses', addresses);
+router.use('/orders', orders);
 
-export default r;
+export default router;

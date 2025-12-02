@@ -13,7 +13,7 @@ export class CheeseProduct {
   cheeseType?: string;
 
   @Column({ name: 'base_price', type: 'numeric', precision: 10, scale: 2, default: 0 })
-  basePrice!: string; // decimal → string
+  basePrice!: string; 
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive!: boolean;

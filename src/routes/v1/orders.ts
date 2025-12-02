@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { checkJwt } from '../../middleware/checkJwt';
 import { checkRole } from '../../middleware/checkRole';
-import * as c from '../../controllers/orders/order.controller'; // если файл у тебя так называется
+import { OrderController } from '../../controllers/orders/order.controller';
 
-const r = Router();
-r.get('/', c.list);                  // внутри сервиса relations: ['customer','items','items.product']
-r.get('/:id(\\d+)', c.show);
-r.post('/', [checkJwt], c.create);   // оформить заказ — авторизованный
-r.put('/:id(\\d+)', [checkJwt, checkRole(['ADMINISTRATOR'])], c.edit);
-r.delete('/:id(\\d+)', [checkJwt, checkRole(['ADMINISTRATOR'])], c.destroy);
-export default r;
+const router = Router();
+const controller = new OrderController();
+router.get('/', controller.list.bind(controller));    // relations: ['customer','items','items.product']
+router.get('/:id(\\d+)', controller.get.bind(controller));
+router.post('/', [checkJwt], controller.create.bind(controller));
+router.patch('/:id(\\d+)', [checkJwt, checkRole(['ADMINISTRATOR'])], controller.update.bind(controller));
+router.delete('/:id(\\d+)', [checkJwt, checkRole(['ADMINISTRATOR'])], controller.delete.bind(controller));
+export default router;
