@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { OrderService } from '../../services/order.service';
+import { OrderResponseDto } from '../../dto/response/OrderResponseDto';
 import type { CreateOrderDto, UpdateOrderDto } from '../../dto/order.dto';
 
 export class OrderController {
@@ -8,7 +9,7 @@ export class OrderController {
   async list(req: Request, res: Response, next: NextFunction) {
     try {
       const items = await this.orderService.list();
-      res.json(items);
+      res.json(items.map(item => new OrderResponseDto(item)));
     } catch (e) {
       next(e);
     }
@@ -22,7 +23,7 @@ export class OrderController {
         res.status(404).json({ message: 'Not found' });
         return;
       }
-      res.json(order);
+      res.json(new OrderResponseDto(order));
     } catch (e) {
       next(e);
     }
@@ -47,7 +48,7 @@ export class OrderController {
         res.status(404).json({ message: 'Not found' });
         return;
       }
-      res.json(updated);
+      res.json(new OrderResponseDto(updated));
     } catch (e) {
       next(e);
     }

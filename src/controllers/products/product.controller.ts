@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ProductService } from '../../services/product.service';
-import type { CreateProductDto, UpdateProductDto } from '../../dto/product.dto';
+import { ProductResponseDto } from '../../dto/response/ProductResponseDto';
+import { CreateProductDto, UpdateProductDto } from '../../dto/product.dto';
 
 export class ProductController {
   private productService = new ProductService();
@@ -8,7 +9,8 @@ export class ProductController {
   async list(req: Request, res: Response, next: NextFunction) {
     try {
       const items = await this.productService.list();
-      res.json(items);
+      const dtos = items.map(item => new ProductResponseDto(item));
+      res.json(dtos);
     } catch (e) {
       next(e);
     }
@@ -22,7 +24,7 @@ export class ProductController {
         res.status(404).json({ message: 'Not found' });
         return;
       }
-      res.json(item);
+      res.json(new ProductResponseDto(item));
     } catch (e) {
       next(e);
     }
@@ -32,7 +34,7 @@ export class ProductController {
     try {
       const dto = req.body as CreateProductDto;
       const created = await this.productService.create(dto);
-      res.status(201).json(created);
+      res.status(201).json(new ProductResponseDto(created));
     } catch (e) {
       next(e);
     }
@@ -47,7 +49,7 @@ export class ProductController {
         res.status(404).json({ message: 'Not found' });
         return;
       }
-      res.json(updated);
+      res.json(new ProductResponseDto(updated));
     } catch (e) {
       next(e);
     }

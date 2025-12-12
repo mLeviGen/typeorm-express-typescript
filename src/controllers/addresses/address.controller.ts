@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AddressService } from '../../services/address.service';
+import { AddressResponseDto } from '../../dto/response/AddressResponseDto';
 import type { CreateAddressDto, UpdateAddressDto } from '../../dto/address.dto';
 
 export class AddressController {
@@ -8,7 +9,7 @@ export class AddressController {
   async list(req: Request, res: Response, next: NextFunction) {
     try {
       const items = await this.addressService.list();
-      res.json(items);
+      res.json(items.map(item => new AddressResponseDto(item)));
     } catch (e) {
       next(e);
     }
@@ -22,7 +23,7 @@ export class AddressController {
         res.status(404).json({ message: 'Not found' });
         return;
       }
-      res.json(addr);
+      res.json(new AddressResponseDto(addr));
     } catch (e) {
       next(e);
     }
@@ -32,7 +33,7 @@ export class AddressController {
     try {
       const dto = req.body as CreateAddressDto;
       const created = await this.addressService.create(dto);
-      res.status(201).json(created);
+      res.status(201).json(new AddressResponseDto(created));
     } catch (e) {
       next(e);
     }
@@ -47,7 +48,7 @@ export class AddressController {
         res.status(404).json({ message: 'Not found' });
         return;
       }
-      res.json(updated);
+      res.json(new AddressResponseDto(updated));
     } catch (e) {
       next(e);
     }

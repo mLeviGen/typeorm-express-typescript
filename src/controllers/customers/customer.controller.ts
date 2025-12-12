@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { CustomerService } from '../../services/customer.service';
-import type { CreateCustomerDto, UpdateCustomerDto } from '../../dto/customer.dto';
+import { CustomerResponseDto } from 'dto/response/CustomerResponseDto';
+import { CreateCustomerDto, UpdateCustomerDto } from '../../dto/customer.dto';
 
 export class CustomerController {
   private customerService = new CustomerService();
@@ -8,7 +9,7 @@ export class CustomerController {
   async list(req: Request, res: Response, next: NextFunction) {
     try {
       const items = await this.customerService.list();
-      res.json(items);
+      res.json(items.map(item => new CustomerResponseDto(item)) );
     } catch (e) {
       next(e);
     }
@@ -22,7 +23,7 @@ export class CustomerController {
         res.status(404).json({ message: 'Not found' });
         return;
       }
-      res.json(customer);
+      res.json(new CustomerResponseDto(customer));
     } catch (e) {
       next(e);
     }
@@ -32,7 +33,7 @@ export class CustomerController {
     try {
       const dto = req.body as CreateCustomerDto;
       const created = await this.customerService.create(dto);
-      res.status(201).json(created);
+      res.status(201).json(new CustomerResponseDto(created));
     } catch (e) {
       next(e);
     }
@@ -47,7 +48,7 @@ export class CustomerController {
         res.status(404).json({ message: 'Not found' });
         return;
       }
-      res.json(updated);
+      res.json(new CustomerResponseDto(updated));
     } catch (e) {
       next(e);
     }
