@@ -19,7 +19,7 @@ export class ProductService {
     const entity = this.repo.create({
       name: dto.name,
       cheeseType: dto.cheeseType,
-      basePrice: dto.basePrice ?? '0',
+      basePrice: dto.basePrice !== undefined && dto.basePrice !== null ? String(dto.basePrice) : '0',
       isActive: dto.isActive ?? true,
     });
     return this.repo.save(entity);
@@ -28,7 +28,19 @@ export class ProductService {
   async update(id: number, dto: UpdateProductDto): Promise<CheeseProduct | null> {
     const entity = await this.repo.findOne(id);
     if (!entity) return null;
-    this.repo.merge(entity, dto);
+
+    const patch: Partial<CheeseProduct> = {};
+
+    if (dto.name !== undefined) patch.name = dto.name;
+    if (dto.cheeseType !== undefined) patch.cheeseType = dto.cheeseType;
+
+    if (dto.basePrice !== undefined && dto.basePrice !== null) {
+      patch.basePrice = String(dto.basePrice);
+    }
+
+    if (dto.isActive !== undefined) patch.isActive = dto.isActive;
+
+    this.repo.merge(entity, patch);
     return this.repo.save(entity);
   }
 

@@ -1,7 +1,7 @@
 export type CreateOrderItemDto = {
   productId: number;
   quantity: number;             
-  unitPrice: string;           
+  unitPrice: string | number;           
 };
 
 export type OrderStatus = 'NEW' | 'PAID' | 'SHIPPED' | 'CANCELLED';

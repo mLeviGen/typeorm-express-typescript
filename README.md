@@ -27,6 +27,143 @@ _Easily set up a local development environment with single command!_
 
 Visit [localhost:4000](http://localhost:4000/) or if using Postman grab [config](/postman).
 
+---
+
+## Lab 5-6 extension: custom entities + REST API + service layer/validation/DTO
+
+This repo was extended with entities from a PostgreSQL database (tables are kept intact):
+
+### Entities and relations
+
+- **Address** (`addresses`) 1..* **Customer** (`customers`)
+- **Customer** 1..* **CustomerOrder** (`customer_orders`)
+- **CustomerOrder** 1..* **OrderItem** (`order_items`)
+- **CheeseProduct** (`cheese_products`) 1..* **OrderItem**
+
+In other words: `Order -> Customer -> Address` and `Order -> Items -> Product`.
+
+### API endpoints
+
+CRUD is implemented for each entity. Some endpoints are protected with JWT and role checks.
+
+**Products** (`/v1/products`)
+- `GET /` - list
+- `GET /:id`
+- `POST /` *(ADMINISTRATOR)*
+- `PATCH /:id` *(ADMINISTRATOR)*
+- `DELETE /:id` *(ADMINISTRATOR)*
+
+**Addresses** (`/v1/addresses`)
+- `GET /` - list
+- `GET /:id`
+- `POST /` *(ADMINISTRATOR)*
+- `PATCH /:id` *(ADMINISTRATOR)*
+- `DELETE /:id` *(ADMINISTRATOR)*
+
+**Customers** (`/v1/customers`)
+- `GET /` - list
+- `GET /:id`
+- `POST /` *(ADMINISTRATOR)*
+- `PATCH /:id` *(ADMINISTRATOR)*
+- `DELETE /:id` *(ADMINISTRATOR)*
+
+**Orders** (`/v1/orders`)
+- `GET /` - list (with joins)
+- `GET /:id` (with joins)
+- `POST /` *(authorized)*
+- `PATCH /:id` *(ADMINISTRATOR)*
+- `DELETE /:id` *(ADMINISTRATOR)*
+
+### Architecture (Lab 6)
+
+The code follows **Separation of Concerns**:
+
+- **Middleware (validation)**: validates incoming request data and throws `CustomError` (400).
+- **Controller**: orchestrates request handling, calls services, converts entities to DTO.
+- **Service**: contains business logic and repository calls.
+- **Repository (TypeORM)**: DB access through `getRepository(Entity)`.
+
+#### Example: validation middleware
+
+```ts
+// src/middleware/validation/product/validatorCreateProduct.ts
+import { Request, Response, NextFunction } from 'express';
+import validator from 'validator';
+import { CustomError } from 'utils/response/custom-error/CustomError';
+
+export const validatorCreateProduct = (req: Request, _res: Response, next: NextFunction) => {
+  const { name, basePrice, cheeseType } = req.body ?? {};
+
+  if (!name || validator.isEmpty(String(name))) {
+    throw new CustomError(400, 'Validation', 'Product validation error', ['Product name is required']);
+  }
+
+  if (!cheeseType || validator.isEmpty(String(cheeseType))) {
+    throw new CustomError(400, 'Validation', 'Product validation error', ['Cheese type is required']);
+  }
+
+  if (basePrice === undefined || basePrice === null || !validator.isFloat(String(basePrice), { gt: 0 })) {
+    throw new CustomError(400, 'Validation', 'Product validation error', ['Price must be a number greater than 0']);
+  }
+
+  return next();
+};
+```
+
+#### Example: service class
+
+```ts
+// src/services/product.service.ts
+import { getRepository, Repository } from 'typeorm';
+import { CheeseProduct } from '../orm/entities/CheeseProduct';
+
+export class ProductService {
+  private get repo(): Repository<CheeseProduct> {
+    return getRepository(CheeseProduct);
+  }
+
+  async create(dto: { name: string; cheeseType?: string; basePrice?: string | number; isActive?: boolean }) {
+    const entity = this.repo.create({
+      name: dto.name,
+      cheeseType: dto.cheeseType,
+      basePrice: dto.basePrice !== undefined && dto.basePrice !== null ? String(dto.basePrice) : '0',
+      isActive: dto.isActive ?? true,
+    });
+    return this.repo.save(entity);
+  }
+}
+```
+
+#### Example: Response DTO
+
+```ts
+// src/dto/response/ProductResponseDto.ts
+import { CheeseProduct } from '../../orm/entities/CheeseProduct';
+
+export class ProductResponseDto {
+  id: number;
+  title: string;
+  cost: number;
+  available: boolean;
+  cheeseType: string;
+
+  constructor(product: CheeseProduct) {
+    this.id = product.id;
+    this.title = product.name;
+    this.cost = Number(product.basePrice);
+    this.available = product.isActive;
+    this.cheeseType = product.cheeseType;
+  }
+}
+```
+
+### Postman screenshots
+
+Add screenshots to the repository (e.g. `docs/screenshots/`) showing:
+
+- a request with invalid input returning **400 Bad Request** from validation middleware
+- a successful request returning the **ResponseDTO** structure
+
 ### _What happened_ 💥
 
 Containers created:

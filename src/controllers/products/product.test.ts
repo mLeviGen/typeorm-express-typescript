@@ -71,16 +71,16 @@ describe('Products Controller', () => {
     const res = await request(app).get('/v1/products');
     expect(res.status).to.equal(200);
     expect(res.body).to.be.an('array');
-    const found = res.body.find((p: CheeseProduct) => p.id === createdProduct.id);
+    const found = res.body.find((p: any) => p.id === createdProduct.id);
     expect(found).to.not.be.undefined;
-    expect(found.name).to.equal(testProductData.name);
+    expect(found.title).to.equal(testProductData.name);
   });
 
   it('GET /v1/products/:id - should return one product', async () => {
     const res = await request(app).get(`/v1/products/${createdProduct.id}`);
     expect(res.status).to.equal(200);
     expect(res.body.id).to.equal(createdProduct.id);
-    expect(res.body.name).to.equal(testProductData.name);
+    expect(res.body.title).to.equal(testProductData.name);
   });
 
   it('POST /v1/products - should create a new product', async () => {
@@ -98,7 +98,7 @@ describe('Products Controller', () => {
     
     expect(res.status).to.equal(201);
     expect(res.body).to.have.property('id');
-    expect(res.body.name).to.equal(newProductData.name);
+    expect(res.body.title).to.equal(newProductData.name);
 
     await productRepo.delete(res.body.id);
   });
@@ -114,7 +114,7 @@ describe('Products Controller', () => {
       .send(updateData);
     
     expect(res.status).to.equal(200);
-    expect(Number(res.body.basePrice)).to.equal(999.00);
+    expect(Number(res.body.cost)).to.equal(999.00);
   });
 
   it('DELETE /v1/products/:id - should delete product', async () => {

@@ -1,7 +1,7 @@
 export type CreateProductDto = {
   name: string;
   cheeseType?: string;          
-  basePrice?: string;           
+  basePrice?: string | number;           
   isActive?: boolean;           
 };
 

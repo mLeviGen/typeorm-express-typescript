@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { CustomerService } from '../../services/customer.service';
-import { CustomerResponseDto } from 'dto/response/CustomerResponseDto';
-import { CreateCustomerDto, UpdateCustomerDto } from '../../dto/customer.dto';
+import { CustomerResponseDto } from '../../dto/response/CustomerResponseDto';
+import type { CreateCustomerDto, UpdateCustomerDto } from '../../dto/customer.dto';
 
 export class CustomerController {
   private customerService = new CustomerService();
@@ -31,7 +31,12 @@ export class CustomerController {
 
   async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const dto = req.body as CreateCustomerDto;
+      const body = req.body as any;
+      const dto: CreateCustomerDto = {
+        name: body.name,
+        phone: body.phone,
+        addressId: body.addressId ?? body.address,
+      };
       const created = await this.customerService.create(dto);
       res.status(201).json(new CustomerResponseDto(created));
     } catch (e) {
@@ -42,7 +47,11 @@ export class CustomerController {
   async update(req: Request, res: Response, next: NextFunction) {
     try {
       const id = Number(req.params.id);
-      const dto = req.body as UpdateCustomerDto;
+      const body = req.body as any;
+      const dto: UpdateCustomerDto = {
+        ...body,
+        addressId: body.addressId ?? body.address,
+      };
       const updated = await this.customerService.update(id, dto);
       if (!updated) {
         res.status(404).json({ message: 'Not found' });

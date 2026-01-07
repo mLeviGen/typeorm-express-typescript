@@ -33,7 +33,7 @@ export class OrderController {
     try {
       const dto = req.body as CreateOrderDto;
       const created = await this.orderService.create(dto);
-      res.status(201).json(created);
+      res.status(201).json(new OrderResponseDto(created));
     } catch (e) {
       next(e);
     }

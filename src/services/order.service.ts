@@ -3,6 +3,9 @@ import { CustomerOrder } from '../orm/entities/CustomerOrder';
 import { OrderItem } from '../orm/entities/OrderItem';
 import { Customer } from '../orm/entities/Customer';
 import type { CreateOrderDto, UpdateOrderDto } from '../dto/order.dto';
+import { CustomError } from '../utils/response/custom-error/CustomError';
+
+const ORDER_RELATIONS = ['customer', 'customer.address', 'items', 'items.product'] as const;
 
 export class OrderService {
   private get orderRepo(): Repository<CustomerOrder> {
@@ -19,14 +22,14 @@ export class OrderService {
 
   list(): Promise<CustomerOrder[]> {
     return this.orderRepo.find({
-      relations: ['customer', 'customer.address', 'items', 'items.product'],
+      relations: [...ORDER_RELATIONS],
       order: { id: 'DESC' },
     });
   }
 
   get(id: number): Promise<CustomerOrder | undefined> {
     return this.orderRepo.findOne(id, {
-      relations: ['customer', 'customer.address', 'items', 'items.product'],
+      relations: [...ORDER_RELATIONS],
     });
   }
 
@@ -34,9 +37,7 @@ export class OrderService {
     const customer = await this.customerRepo.findOne(dto.customerId);
 
     if (!customer) {
-      const error = new Error(`Customer with id ${dto.customerId} not found`);
-      (error as any).httpCode = 404;
-      throw error;
+      throw new CustomError(404, 'General', 'Not Found', [`Customer with id ${dto.customerId} not found`]);
     }
 
     const orderEntity = this.orderRepo.create({
@@ -52,7 +53,7 @@ export class OrderService {
           order: { id: order.id },
           product: { id: i.productId },
           quantity: i.quantity,
-          unitPrice: i.unitPrice,
+          unitPrice: String(i.unitPrice),
         }),
       );
       await this.itemRepo.save(items);
@@ -68,9 +69,10 @@ export class OrderService {
 
     if (dto.customerId) {
       const newCustomer = await this.customerRepo.findOne(dto.customerId);
-      if (newCustomer) {
-        order.customer = newCustomer;
+      if (!newCustomer) {
+        throw new CustomError(404, 'General', 'Not Found', [`Customer with id ${dto.customerId} not found`]);
       }
+      order.customer = newCustomer;
     }
 
     if (dto.status !== undefined) order.status = dto.status;
